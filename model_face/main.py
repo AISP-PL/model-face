@@ -80,6 +80,8 @@ def main_anonymize() -> None:
     parser.add_argument(
         "--pixelate", action="store_true", help="pixelate the face instead of blurring"
     )
+    parser.add_argument("--inplace", action="store_true", help="inplace anonymization")
+    parser.add_argument("--verbose", action="store_true", help="Show image")
     args = parser.parse_args()
 
     # Initialize YOLOv8_face object detector
@@ -92,16 +94,23 @@ def main_anonymize() -> None:
     detections = detector.detect(source)
 
     # Anonymize
-    scene = source.copy()
+    anonymized_im = source.copy()
     for xyxy in detections.xyxy:
-        scene = (
-            pixelate_box(image=scene, box=xyxy)
+        anonymized_im = (
+            pixelate_box(image=anonymized_im, box=xyxy)
             if args.pixelate
-            else blur_box(image=scene, box=xyxy)
+            else blur_box(image=anonymized_im, box=xyxy)
         )
 
-    cv2.imshow("YOLOv8 Face Detection", scene)
-    cv2.waitKey(0)
+    #  Save : Only if inplace is set and found faces
+    if args.inplace and detections != sv.Detections.empty():
+        cv2.imwrite(args.imgpath, anonymized_im)
+        logger.info(f"Saved anonymized image to {args.imgpath}")
+
+    # Show image
+    if args.verbose:
+        cv2.imshow("YOLOv8 Face Detection", anonymized_im)
+        cv2.waitKey(0)
 
 
 if __name__ == "__main__":
