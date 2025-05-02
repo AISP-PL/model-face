@@ -1,5 +1,8 @@
 # Model facet - AISP repository for face detection and recognition
 
+Detector used for blurring or pixelating faces in images. Recognizer used for face recognition and verification.
+
+![Face detection and recognition](docs/title.png)
 
 # Directory structure
 
