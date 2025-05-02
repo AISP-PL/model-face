@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def anonymize_file(detector: YOLOv8FaceDetection, image_name: str, source_directory: str) -> tuple[str, bool]:
-    """Threded Resize image"""
+    """Anonymize an image by detecting faces and applying a blur to the detected regions."""
     try:
         source_path = os.path.join(source_directory, image_name)
         image = cv2.imread(source_path)
