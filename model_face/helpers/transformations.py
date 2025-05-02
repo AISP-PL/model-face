@@ -33,17 +33,17 @@ def pixelate_box(
     image: np.ndarray, box: tuple[int, int, int, int], pixel_size: int = 8
 ) -> np.ndarray:
     """
-    Pixelate whole image.
+    Pixelate a specified rectangular region (box) within the image.
 
     Parameters:
     ----------------
-        roi (np.ndarray): Image to pixelate.
-        box : tuple[int,int,int,int]: Box to pixelate.
-        pixel_size (int): Pixel size.
+        image (np.ndarray): The input image to modify.
+        box (tuple[int, int, int, int]): The rectangular region to pixelate, defined as (x1, y1, x2, y2).
+        pixel_size (int): The size of the pixels in the pixelated region.
 
     Returns:
     ----------------
-        np.ndarray: Pixelated image.
+        np.ndarray: The image with the specified region pixelated.
     """
     roi = image[box[1] : box[3], box[0] : box[2]]
     downscaled_width = max(1, roi.shape[1] // pixel_size)

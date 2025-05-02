@@ -56,11 +56,8 @@ def main_detect() -> None:
 
 def main_anonymize() -> None:
     """Main function to run the detection."""
-    # Basic logging config to console
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    # Configure logging
+    configure_logging()
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
