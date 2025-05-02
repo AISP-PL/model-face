@@ -93,6 +93,12 @@ def main_anonymize() -> None:
     )
     detections = detector.detect(source)
 
+    # Logging : How many faces detected
+    if detections == sv.Detections.empty():
+        logger.warning("No faces detected.")
+    else:
+        logger.info(f"Detected {len(detections)} faces.")
+
     # Anonymize
     anonymized_im = source.copy()
     for xyxy in detections.xyxy:
