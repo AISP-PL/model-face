@@ -115,6 +115,8 @@ class YOLOv8FaceDetection:
 
         # Perform inference on the image
         det_xywh, det_conf, det_classid, landmarks = self.post_process(outputs, scale_h, scale_w, padh, padw)
+        if len(det_xywh) == 0:
+            return sv.Detections.empty()
 
         # Padding : Increase width/height by +padding in px
         det_xywh[:, 2:] += self.padding
@@ -180,12 +182,17 @@ class YOLOv8FaceDetection:
         class_ids = class_ids[mask]
         landmarks = landmarks[mask]
 
+        # Check : No detections
+        if len(bboxes_wh) == 0:
+            return np.array([]), np.array([]), np.array([]), np.array([])
+
         indices = cv2.dnn.NMSBoxes(
             bboxes_wh.tolist(),
             confidences.tolist(),
             self.conf_threshold,
             self.iou_threshold,
         ).flatten()  ## type: ignore
+
         if len(indices) > 0:
             mlvl_bboxes = bboxes_wh[indices]
             confidences = confidences[indices]

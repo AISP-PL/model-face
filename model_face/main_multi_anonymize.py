@@ -27,9 +27,14 @@ def anonymize_file(detector: YOLOv8FaceDetection, image_name: str, source_direct
 
         # Logging : How many faces detected
         if detections == sv.Detections.empty():
-            logger.warning("No faces detected.")
+            logger.info("No faces on %s image.", image_name)
         else:
-            logger.info(f"Detected {len(detections)} faces.")
+            logger.info(
+                "Detected %u faces inside %s image. Average conf %2.2f.",
+                len(detections),
+                image_name,
+                detections.confidence.mean(),  # type: ignore
+            )
 
         # Anonymize
         anonymized_im = image
