@@ -96,7 +96,7 @@ def main_anonymize() -> None:
         default="zoo/yolov8n-face.onnx",
         help="onnx filepath",
     )
-    parser.add_argument("--confThreshold", default=0.20, type=float, help="class confidence")
+    parser.add_argument("--confThreshold", default=0.10, type=float, help="class confidence")
     parser.add_argument("--nmsThreshold", default=0.40, type=float, help="nms iou thresh")
     parser.add_argument("--pixelate", action="store_true", help="pixelate the face instead of blurring")
     parser.add_argument("--padding", default=5, type=int, help="Bounding box padding size in px")
