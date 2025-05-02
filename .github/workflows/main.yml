@@ -1,0 +1,127 @@
+name: CI
+
+# Required for creating & uploading release assets
+permissions:
+  contents: write
+
+on:
+  # 1) Run on any push to main
+  push:
+    branches: [ main ]
+    # 2) Also run on pushes to tags (like v1.0.0)
+    tags:
+      - 'v*'
+
+  # 3) Run on any pull request to main
+  pull_request:
+    branches: [ main ]
+
+  # Allows manual triggering from Actions tab
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # 1) Build & Test Job
+  #    Runs for:
+  #      - push to main branch
+  #      - pull request to main
+  #      - push of new tag
+  # ─────────────────────────────────────────────────────────────
+  build-test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        python-version: [ "3.11" ]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - run: git fetch --prune --unshallow
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.4"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name : Mypy type check
+        run: uv run --no-sync mypy --ignore-missing-imports .
+
+      - name: Lint with RUFF
+        run: |
+             uv run --no-sync ruff check
+             uv run --no-sync ruff format --diff
+             uv run --no-sync taplo format --check --diff *.toml
+
+      - name: Run tests normal
+        run: uv run --no-sync pytest --verbose tests/ -m "not manual and not gpu"
+
+  # ─────────────────────────────────────────────────────────────
+  # 2) Release Job
+  #    Runs only if the push is on a tag (e.g. refs/tags/v1.2.3).
+  #    Depends on the tests passing in `build-test`.
+  # ─────────────────────────────────────────────────────────────
+  release:
+    needs: build-test
+    runs-on: ubuntu-22.04
+    # Only run this job if we're on a tag push
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - run: git fetch --prune --unshallow
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.4"
+
+      - name: Install dependencies (not group dev)
+        run: uv sync --no-dev
+
+      - name: Build dist
+        run: uv build
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: svenstaro/upload-release-action@v2
+        with:
+          # Must include repo_token for authentication
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*
+          file_glob: true
+          # Same tag name as above
+          tag: ${{ github.ref_name }}
+          overwrite: true
+

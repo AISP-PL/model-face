@@ -1,0 +1,87 @@
+[project]
+name = "Template"
+description = ""
+authors = [{ name = "AISP", email = "kontakt@aisp.pl" }]
+readme = "README.md"
+requires-python = ">=3.11, <3.12"
+dynamic = ["version"]
+
+dependencies = ["dotenv>=0.9.9"]
+
+[dependency-groups]
+dev = [
+  "taplo>=0.9.3",
+  "ruff>=0.11.5",
+  "pre-commit>=4.2.0",
+  "pytest>=8.3.5",
+  "mypy>=1.15.0",
+  "types-requests>=2.32.0.20250328",
+  "coverage>=7.8.0",
+  "pytest-cov>=6.1.1",
+]
+
+
+[tool.pyright]
+typeCheckingMode = "basic"
+exclude = ['.venv', '.pytest_cache', 'darknet.py']
+reportMissingImports = "information"
+reportPrivateImportUsage = "none"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ['.venv', '.pytest_cache', 'darknet.py']
+
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules/
+preview = true
+explicit-preview-rules = true
+select = [
+  "E",
+  "F",
+  "B",
+  "Q",
+  "I",
+  "N",
+  "LOG",
+  "LOG015",
+  "UP",
+  "UP045",
+  "RET",
+  "C4",
+  "ISC",
+  "PIE",
+  "RSE",
+  "SLOT",
+  "FAST",
+  "SIM",
+]
+#Ignoring as recommended at https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+ignore = [
+  "E111",
+  "E114",
+  "E117",
+  "E501",
+  "Q000",
+  "Q001",
+  "Q002",
+  "Q003",
+  "N815",
+]
+
+[tool.mypy]
+exclude = ['.venv', '.pytest_cache', 'darknet.py']
+
+[tool.pdm.version]
+source = "scm"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+markers = [
+  "manual: marks tests as manual only (deselect with '-m \"not manual\"')",
+  "gpu: marks tests that require GPU",
+]

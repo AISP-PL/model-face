@@ -1,0 +1,31 @@
+repos:
+- repo: local
+  hooks:
+  - id: ruff format
+    name: ruff format
+    types_or: [python, pyi]
+    require_serial: true
+    language: system
+    entry: uv run --no-sync ruff format --diff --config=pyproject.toml
+
+  - id: ruff lint
+    name: ruff lint
+    types: [python]
+    require_serial: true
+    language: system
+    entry: uv run --no-sync ruff check --config=pyproject.toml
+
+  - id: mypy
+    name: mypy
+    types: [python]
+    require_serial: true
+    language: system
+    entry: uv run --no-sync mypy --config=pyproject.toml
+
+  - id: taplo
+    name: taplo
+    types_or: [toml]
+    require_serial: true
+    minimum_pre_commit_version: 2.9.2
+    language: system
+    entry: uv run --no-sync taplo format
