@@ -10,6 +10,7 @@ dependencies = [
   "dotenv>=0.9.9",
   "opencv-python>=4.11.0.86",
   "supervision>=0.25.1",
+  "yaya-tools",
 ]
 
 
@@ -91,7 +92,11 @@ markers = [
   "gpu: marks tests that require GPU",
 ]
 
+[tool.uv.sources]
+yaya-tools = { url = "https://github.com/AISP-PL/yaya-tools/releases/download/v1.2.12/yaya_tools-1.1.0-py3-none-any.whl" }
+
 # Scripts
 [project.scripts]
-face-detect = "model_face.main:main_detect"
-face-anonymize = "model_face.main:main_anonymize"
+face-detect = "model_face.main_detection:main_detect"
+face-anonymize = "model_face.main_anonymize:main_anonymize"
+face-multi-anonymize = "model_face.main_multi_anonymize:main_anonymize"
