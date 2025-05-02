@@ -93,3 +93,4 @@ markers = [
 # Scripts
 [project.scripts]
 face-detect = "model_face.main:main_detect"
+face-anonymize = "model_face.main:main_anonymize"
