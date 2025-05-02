@@ -5,7 +5,19 @@ import numpy as np
 def blur_box(
     image: np.ndarray, box: tuple[int, int, int, int], size: int = 10
 ) -> np.ndarray:
-    """Blurred rain on image."""
+    """
+    Apply a Gaussian blur to a specified rectangular region (box) within the image.
+
+    Parameters:
+    ----------------
+        image (np.ndarray): The input image to modify.
+        box (tuple[int, int, int, int]): The rectangular region to blur, defined as (x1, y1, x2, y2).
+        size (int): The maximum kernel size for the Gaussian blur. Must be a positive odd integer.
+
+    Returns:
+    ----------------
+        np.ndarray: The image with the specified region blurred.
+    """
     x1, y1, x2, y2 = box
     box_width = int(x2 - x1) // 2
     box_height = int(y2 - y1) // 2

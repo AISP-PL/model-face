@@ -10,14 +10,14 @@ from model_face.helpers.transformations import blur_box, pixelate_box  # type: i
 logger = logging.getLogger(__name__)
 
 
-def main_detect() -> None:
-    """Main function to run the detection."""
-    # Basic logging config to console
+def configure_logging() -> None:
+    """Configure logging for the application."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
+def main_detect() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--imgpath", type=str, default="images/1.jpg", help="image path"
