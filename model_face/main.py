@@ -115,6 +115,10 @@ def main_anonymize() -> None:
 
     # Show image
     if args.verbose:
+        box_annotator = sv.BoxAnnotator()
+        anonymized_im = box_annotator.annotate(
+            scene=anonymized_im, detections=detections
+        )
         cv2.imshow("YOLOv8 Face Detection", anonymized_im)
         cv2.waitKey(0)
 
