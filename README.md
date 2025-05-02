@@ -1,11 +1,7 @@
-# Template : How to start and customize?
+# Model facet - AISP repository for face detection and recognition
 
-- [ ] Create new repository from this template
-- [ ] Inside pyproject.toml rename `package_name`
-- [ ] Rename aisp_template directory to `package_name`
-- [ ] Update `README.md`
 
-# Template directory structure
+# Directory structure
 
 - package_name/ - Insert package code here
 - tests/ - Insert unit tests here
