@@ -129,7 +129,7 @@ class YOLOv8FaceDetection:
 
     def post_process(self, preds, scale_h, scale_w, padh, padw):
         bboxes, scores, landmarks = [], [], []
-        for i, pred in enumerate(preds):
+        for _i, pred in enumerate(preds):
             stride = int(self.input_height / pred.shape[2])
             pred = pred.transpose((0, 2, 3, 1))
 
@@ -177,13 +177,13 @@ class YOLOv8FaceDetection:
 
         bboxes_wh = bboxes.copy()
         bboxes_wh[:, 2:4] = bboxes[:, 2:4] - bboxes[:, 0:2]  ####xywh
-        classIds = np.argmax(scores, axis=1)
+        class_ids = np.argmax(scores, axis=1)
         confidences = np.max(scores, axis=1)  ####max_class_confidence
 
         mask = confidences > self.conf_threshold
         bboxes_wh = bboxes_wh[mask]
         confidences = confidences[mask]
-        classIds = classIds[mask]
+        class_ids = class_ids[mask]
         landmarks = landmarks[mask]
 
         indices = cv2.dnn.NMSBoxes(
@@ -191,18 +191,19 @@ class YOLOv8FaceDetection:
             confidences.tolist(),
             self.conf_threshold,
             self.iou_threshold,
-        ).flatten()
+        ).flatten()  ## type: ignore
         if len(indices) > 0:
             mlvl_bboxes = bboxes_wh[indices]
             confidences = confidences[indices]
-            classIds = classIds[indices]
+            class_ids = class_ids[indices]
             landmarks = landmarks[indices]
-            return mlvl_bboxes, confidences, classIds, landmarks
+            return mlvl_bboxes, confidences, class_ids, landmarks
 
         print("nothing detect")
         return np.array([]), np.array([]), np.array([]), np.array([])
 
     def distance2bbox(self, points, distance, max_shape=None):
+        """Convert distance to bounding box coordinates."""
         x1 = points[:, 0] - distance[:, 0]
         y1 = points[:, 1] - distance[:, 1]
         x2 = points[:, 0] + distance[:, 2]
@@ -212,6 +213,7 @@ class YOLOv8FaceDetection:
             y1 = np.clip(y1, 0, max_shape[0])
             x2 = np.clip(x2, 0, max_shape[1])
             y2 = np.clip(y2, 0, max_shape[0])
+
         return np.stack([x1, y1, x2, y2], axis=-1)
 
 
