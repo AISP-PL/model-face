@@ -17,6 +17,7 @@ def configure_logging() -> None:
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
+
 def main_detect() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -80,7 +81,9 @@ def main_anonymize() -> None:
     parser.add_argument(
         "--pixelate", action="store_true", help="pixelate the face instead of blurring"
     )
-    parser.add_argument("--padding", default=5, type=int, help="Bounding box padding size in px")
+    parser.add_argument(
+        "--padding", default=5, type=int, help="Bounding box padding size in px"
+    )
     parser.add_argument("--inplace", action="store_true", help="inplace anonymization")
     parser.add_argument("--verbose", action="store_true", help="Show image")
     args = parser.parse_args()
@@ -90,8 +93,10 @@ def main_anonymize() -> None:
 
     # Detect Objects
     detector = YOLOv8FaceDetection(
-        args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold
-        padding=args.padding
+        args.modelpath,
+        conf_thres=args.confThreshold,
+        iou_thres=args.nmsThreshold,
+        padding=args.padding,
     )
     detections = detector.detect(source)
 
