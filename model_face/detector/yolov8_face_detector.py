@@ -8,7 +8,7 @@ import supervision as sv  # type: ignore
 class YOLOv8FaceDetection:
     """YOLOv8 face detection model"""
 
-    def __init__(self, path, conf_thres=0.2, iou_thres=0.5):
+    def __init__(self, path, conf_thres=0.2, iou_thres=0.5, padding: int = 10):
         """Initialize YOLOv8 face detection model."""
         self.conf_threshold = conf_thres
         self.iou_threshold = iou_thres
@@ -19,6 +19,7 @@ class YOLOv8FaceDetection:
         self.input_height = 640
         self.input_width = 640
         self.reg_max = 16
+        self.padding = padding
 
         self.project = np.arange(self.reg_max)
         self.strides = (8, 16, 32)
@@ -119,6 +120,10 @@ class YOLOv8FaceDetection:
             outputs, scale_h, scale_w, padh, padw
         )
 
+        # Padding : Increase width/height by +padding in px
+        det_xywh[:, 2:] += self.padding
+
+        # Convert to xyxy format
         det_xyxy = sv.xywh_to_xyxy(det_xywh)
 
         return sv.Detections(
