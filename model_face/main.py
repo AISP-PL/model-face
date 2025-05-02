@@ -1,9 +1,12 @@
 import argparse
+import logging
 import math
 
 import cv2
 import numpy as np
 import supervision as sv  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 class YOLOv8FaceDetection:
@@ -116,12 +119,14 @@ class YOLOv8FaceDetection:
         outputs = self.net.forward(self.net.getUnconnectedOutLayersNames())
 
         # Perform inference on the image
-        det_bboxes, det_conf, det_classid, landmarks = self.post_process(
+        det_xywh, det_conf, det_classid, landmarks = self.post_process(
             outputs, scale_h, scale_w, padh, padw
         )
 
+        det_xyxy = sv.xywh_to_xyxy(det_xywh)
+
         return sv.Detections(
-            xyxy=det_bboxes.astype(int),
+            xyxy=det_xyxy.astype(int),
             class_id=det_classid.astype(int),
             confidence=det_conf.astype(float),
             data={"landmarks": landmarks.astype(float)},
@@ -199,7 +204,6 @@ class YOLOv8FaceDetection:
             landmarks = landmarks[indices]
             return mlvl_bboxes, confidences, class_ids, landmarks
 
-        print("nothing detect")
         return np.array([]), np.array([]), np.array([]), np.array([])
 
     def distance2bbox(self, points, distance, max_shape=None):
@@ -218,6 +222,12 @@ class YOLOv8FaceDetection:
 
 
 if __name__ == "__main__":
+    # Basic logging config to console
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--imgpath", type=str, default="images/1.jpg", help="image path"
