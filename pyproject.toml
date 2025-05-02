@@ -12,6 +12,7 @@ dependencies = [
   "supervision>=0.25.1",
 ]
 
+
 [dependency-groups]
 dev = [
   "taplo>=0.9.3",

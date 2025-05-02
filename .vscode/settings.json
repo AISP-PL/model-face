@@ -1,9 +1,10 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
+            "source.organizeImports": "always",
+            "source.fixAll.ruff": "explicit"
         },
     },
     "[toml]": {
@@ -19,7 +20,9 @@
     "cSpell.enabled": false,
     "python.testing.pytestArgs": [
         "tests",
+        "-m not manual"
     ],
+    "github.copilot.nextEditSuggestions.enabled": false,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "flake8.importStrategy": "fromEnvironment",

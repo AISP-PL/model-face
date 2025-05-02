@@ -20,30 +20,22 @@ def configure_logging() -> None:
 
 def main_detect() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--imgpath", type=str, default="images/1.jpg", help="image path"
-    )
+    parser.add_argument("--imgpath", type=str, default="images/1.jpg", help="image path")
     parser.add_argument(
         "--modelpath",
         type=str,
         default="zoo/yolov8n-face.onnx",
         help="onnx filepath",
     )
-    parser.add_argument(
-        "--confThreshold", default=0.20, type=float, help="class confidence"
-    )
-    parser.add_argument(
-        "--nmsThreshold", default=0.40, type=float, help="nms iou thresh"
-    )
+    parser.add_argument("--confThreshold", default=0.20, type=float, help="class confidence")
+    parser.add_argument("--nmsThreshold", default=0.40, type=float, help="nms iou thresh")
     args = parser.parse_args()
 
     # Initialize YOLOv8_face object detector
     source = cv2.imread(args.imgpath)
 
     # Detect Objects
-    detector = YOLOv8FaceDetection(
-        args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold
-    )
+    detector = YOLOv8FaceDetection(args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold)
     detections = detector.detect(source)
 
     # Draw detections
@@ -60,27 +52,17 @@ def main_anonymize() -> None:
     configure_logging()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--imgpath", type=str, default="images/1.jpg", help="image path"
-    )
+    parser.add_argument("--imgpath", type=str, default="images/1.jpg", help="image path")
     parser.add_argument(
         "--modelpath",
         type=str,
         default="zoo/yolov8n-face.onnx",
         help="onnx filepath",
     )
-    parser.add_argument(
-        "--confThreshold", default=0.20, type=float, help="class confidence"
-    )
-    parser.add_argument(
-        "--nmsThreshold", default=0.40, type=float, help="nms iou thresh"
-    )
-    parser.add_argument(
-        "--pixelate", action="store_true", help="pixelate the face instead of blurring"
-    )
-    parser.add_argument(
-        "--padding", default=5, type=int, help="Bounding box padding size in px"
-    )
+    parser.add_argument("--confThreshold", default=0.20, type=float, help="class confidence")
+    parser.add_argument("--nmsThreshold", default=0.40, type=float, help="nms iou thresh")
+    parser.add_argument("--pixelate", action="store_true", help="pixelate the face instead of blurring")
+    parser.add_argument("--padding", default=5, type=int, help="Bounding box padding size in px")
     parser.add_argument("--inplace", action="store_true", help="inplace anonymization")
     parser.add_argument("--verbose", action="store_true", help="Show image")
     args = parser.parse_args()
@@ -107,9 +89,7 @@ def main_anonymize() -> None:
     anonymized_im = source.copy()
     for xyxy in detections.xyxy:
         anonymized_im = (
-            pixelate_box(image=anonymized_im, box=xyxy)
-            if args.pixelate
-            else blur_box(image=anonymized_im, box=xyxy)
+            pixelate_box(image=anonymized_im, box=xyxy) if args.pixelate else blur_box(image=anonymized_im, box=xyxy)
         )
 
     #  Save : Only if inplace is set and found faces
@@ -120,9 +100,7 @@ def main_anonymize() -> None:
     # Show image
     if args.verbose:
         box_annotator = sv.BoxAnnotator()
-        anonymized_im = box_annotator.annotate(
-            scene=anonymized_im, detections=detections
-        )
+        anonymized_im = box_annotator.annotate(scene=anonymized_im, detections=detections)
         cv2.imshow("YOLOv8 Face Detection", anonymized_im)
         cv2.waitKey(0)
 

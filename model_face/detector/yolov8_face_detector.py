@@ -105,9 +105,7 @@ class YOLOv8FaceDetection:
             Detected bounding boxes.
 
         """
-        input_img, newh, neww, padh, padw = self.resize_image(
-            cv2.cvtColor(srcimg, cv2.COLOR_BGR2RGB)
-        )
+        input_img, newh, neww, padh, padw = self.resize_image(cv2.cvtColor(srcimg, cv2.COLOR_BGR2RGB))
         scale_h, scale_w = srcimg.shape[0] / newh, srcimg.shape[1] / neww
         input_img = input_img.astype(np.float32) / 255.0
 
@@ -116,9 +114,7 @@ class YOLOv8FaceDetection:
         outputs = self.net.forward(self.net.getUnconnectedOutLayersNames())
 
         # Perform inference on the image
-        det_xywh, det_conf, det_classid, landmarks = self.post_process(
-            outputs, scale_h, scale_w, padh, padw
-        )
+        det_xywh, det_conf, det_classid, landmarks = self.post_process(outputs, scale_h, scale_w, padh, padw)
 
         # Padding : Increase width/height by +padding in px
         det_xywh[:, 2:] += self.padding
@@ -141,9 +137,7 @@ class YOLOv8FaceDetection:
 
             box = pred[..., : self.reg_max * 4]
             cls = 1 / (1 + np.exp(-pred[..., self.reg_max * 4 : -15])).reshape((-1, 1))
-            kpts = pred[..., -15:].reshape(
-                (-1, 15)
-            )  ### x1,y1,score1, ..., x5,y5,score5
+            kpts = pred[..., -15:].reshape((-1, 15))  ### x1,y1,score1, ..., x5,y5,score5
 
             # tmp = box.reshape(self.feats_hw[i][0], self.feats_hw[i][1], 4, self.reg_max)
             tmp = box.reshape(-1, 4, self.reg_max)
@@ -158,14 +152,8 @@ class YOLOv8FaceDetection:
                 )
                 * stride
             )
-            kpts[:, 0::3] = (
-                kpts[:, 0::3] * 2.0
-                + (self.anchors[stride][:, 0].reshape((-1, 1)) - 0.5)
-            ) * stride
-            kpts[:, 1::3] = (
-                kpts[:, 1::3] * 2.0
-                + (self.anchors[stride][:, 1].reshape((-1, 1)) - 0.5)
-            ) * stride
+            kpts[:, 0::3] = (kpts[:, 0::3] * 2.0 + (self.anchors[stride][:, 0].reshape((-1, 1)) - 0.5)) * stride
+            kpts[:, 1::3] = (kpts[:, 1::3] * 2.0 + (self.anchors[stride][:, 1].reshape((-1, 1)) - 0.5)) * stride
             kpts[:, 2::3] = 1 / (1 + np.exp(-kpts[:, 2::3]))
 
             bbox -= np.array([[padw, padh, padw, padh]])
