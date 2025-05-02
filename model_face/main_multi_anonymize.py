@@ -1,8 +1,11 @@
 import argparse
 import logging
+from typing import Any
 
 import cv2
 import supervision as sv
+from tqdm import tqdm  # type: ignore
+from yaya_tools.helpers.dataset import load_directory_images_annotatations  # type: ignore
 
 from model_face.detector.yolov8_face_detector import YOLOv8FaceDetection
 from model_face.helpers.transformations import blur_box, pixelate_box  # type: ignore
@@ -38,34 +41,39 @@ def main_anonymize() -> None:
     args = parser.parse_args()
 
     # Initialize YOLOv8_face object detector
-    source = cv2.imread(args.imgpath)
+    images_annotated: dict[str, Any] = load_directory_images_annotatations(args.images)
 
-    # Detect Objects
+    # Detector : Create
     detector = YOLOv8FaceDetection(
         args.modelpath,
         conf_thres=args.confThreshold,
         iou_thres=args.nmsThreshold,
         padding=args.padding,
     )
-    detections = detector.detect(source)
 
-    # Logging : How many faces detected
-    if detections == sv.Detections.empty():
-        logger.warning("No faces detected.")
-    else:
-        logger.info(f"Detected {len(detections)} faces.")
+    for image_path in tqdm(images_annotated.keys(), desc="Processing images"):
+        source = cv2.imread(image_path)
+        detections = detector.detect(source)
 
-    # Anonymize
-    anonymized_im = source.copy()
-    for xyxy in detections.xyxy:
-        anonymized_im = (
-            pixelate_box(image=anonymized_im, box=xyxy) if args.pixelate else blur_box(image=anonymized_im, box=xyxy)
-        )
+        # Logging : How many faces detected
+        if detections == sv.Detections.empty():
+            logger.warning("No faces detected.")
+        else:
+            logger.info(f"Detected {len(detections)} faces.")
 
-    #  Save : Only if inplace is set and found faces
-    if detections != sv.Detections.empty():
-        cv2.imwrite(args.imgpath, anonymized_im)
-        logger.info(f"Saved anonymized image to {args.imgpath}")
+        # Anonymize
+        anonymized_im = source.copy()
+        for xyxy in detections.xyxy:
+            anonymized_im = (
+                pixelate_box(image=anonymized_im, box=xyxy)
+                if args.pixelate
+                else blur_box(image=anonymized_im, box=xyxy)
+            )
+
+        #  Save : Only if inplace is set and found faces
+        if detections != sv.Detections.empty():
+            cv2.imwrite(args.imgpath, anonymized_im)
+            logger.info(f"Saved anonymized image to {args.imgpath}")
 
 
 if __name__ == "__main__":

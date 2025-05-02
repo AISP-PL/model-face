@@ -13,5 +13,14 @@
             "console": "integratedTerminal",
             "justMyCode": false,
         },
+        {
+            "name": "Multi anonymization",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/model_face/main_multi_anonymize.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+        },
     ],
 }
