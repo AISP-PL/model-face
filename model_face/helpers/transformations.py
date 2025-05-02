@@ -7,33 +7,14 @@ def blur_box(
 ) -> np.ndarray:
     """Blurred rain on image."""
     x1, y1, x2, y2 = box
+    box_width = int(x2 - x1) // 2
+    box_height = int(y2 - y1) // 2
+    size = min(box_width, box_height, size)
+    size = size + 1 if size % 2 == 0 else size
     image[y1:y2, x1:x2] = cv2.GaussianBlur(
         image[y1:y2, x1:x2], (size, size), cv2.BORDER_ISOLATED
     )
     return image
-
-
-def pixelate(roi: np.ndarray, pixel_size: int = 8) -> np.ndarray:
-    """
-    Pixelate whole image.
-
-    Parameters:
-    ----------------
-        roi (np.ndarray): Image to pixelate.
-        pixel_size (int): Pixel size.
-
-    Returns:
-    ----------------
-        np.ndarray: Pixelated image.
-    """
-    temp = cv2.resize(
-        roi,
-        (roi.shape[1] // pixel_size, roi.shape[0] // pixel_size),
-        interpolation=cv2.INTER_NEAREST,
-    )
-    return cv2.resize(
-        temp, (roi.shape[1], roi.shape[0]), interpolation=cv2.INTER_NEAREST
-    )
 
 
 def pixelate_box(

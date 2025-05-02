@@ -105,4 +105,4 @@ def main_anonymize() -> None:
 
 
 if __name__ == "__main__":
-    main_detect()
+    main_anonymize()
