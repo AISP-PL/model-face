@@ -1,1 +1,5 @@
 *.weights filter=lfs diff=lfs merge=lfs -text
+zoo/face-quality-assessment.onnx filter=lfs diff=lfs merge=lfs -text
+zoo/yolov8-lite-s.onnx filter=lfs diff=lfs merge=lfs -text
+zoo/yolov8-lite-t.onnx filter=lfs diff=lfs merge=lfs -text
+zoo/yolov8n-face.onnx filter=lfs diff=lfs merge=lfs -text
