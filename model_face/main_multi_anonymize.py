@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from typing import Any
 
 import cv2
@@ -8,9 +9,65 @@ from tqdm import tqdm  # type: ignore
 from yaya_tools.helpers.dataset import load_directory_images_annotatations  # type: ignore
 
 from model_face.detector.yolov8_face_detector import YOLOv8FaceDetection
-from model_face.helpers.transformations import blur_box, pixelate_box  # type: ignore
+from model_face.helpers.transformations import blur_box  # type: ignore
 
 logger = logging.getLogger(__name__)
+
+
+def anonymize_file(detector: YOLOv8FaceDetection, image_name: str, source_directory: str) -> tuple[str, bool]:
+    """Threded Resize image"""
+    try:
+        source_path = os.path.join(source_directory, image_name)
+        image = cv2.imread(source_path)
+        if image is None:
+            logger.error(f"Could not read image {image_name}")
+            return image_name, False
+
+        detections = detector.detect(image)
+
+        # Logging : How many faces detected
+        if detections == sv.Detections.empty():
+            logger.warning("No faces detected.")
+        else:
+            logger.info(f"Detected {len(detections)} faces.")
+
+        # Anonymize
+        anonymized_im = image
+        for xyxy in detections.xyxy:
+            anonymized_im = blur_box(image=anonymized_im, box=xyxy)
+
+        #  Save : Only if inplace is set and found faces
+        if detections != sv.Detections.empty():
+            cv2.imwrite(source_path, anonymized_im)
+            logger.info(f"Saved anonymized image to {source_path}")
+
+        return image_name, True
+
+    except Exception as e:
+        logger.error(f"Error anonymizing image {image_name}: {e}")
+        return image_name, False
+
+
+def multiprocess_anonymize(
+    detector: YOLOv8FaceDetection,
+    source_directory: str,
+    images_names: list[str],
+    pool_size: int = 5,
+) -> tuple[list[str], list[str]]:
+    """
+    Anonymizes images using a single loop instead of multiprocessing,
+    since the detector object cannot be pickled.
+    """
+    sucess_files: list[str] = []
+    failed_files: list[str] = []
+    for image_name in tqdm(images_names, desc="Anonymizing images"):
+        result = anonymize_file(detector, image_name, source_directory)
+        if result[1]:
+            sucess_files.append(image_name)
+        else:
+            failed_files.append(image_name)
+
+    return sucess_files, failed_files
 
 
 def configure_logging() -> None:
@@ -51,29 +108,15 @@ def main_anonymize() -> None:
         padding=args.padding,
     )
 
-    for image_path in tqdm(images_annotated.keys(), desc="Processing images"):
-        source = cv2.imread(image_path)
-        detections = detector.detect(source)
-
-        # Logging : How many faces detected
-        if detections == sv.Detections.empty():
-            logger.warning("No faces detected.")
-        else:
-            logger.info(f"Detected {len(detections)} faces.")
-
-        # Anonymize
-        anonymized_im = source.copy()
-        for xyxy in detections.xyxy:
-            anonymized_im = (
-                pixelate_box(image=anonymized_im, box=xyxy)
-                if args.pixelate
-                else blur_box(image=anonymized_im, box=xyxy)
-            )
-
-        #  Save : Only if inplace is set and found faces
-        if detections != sv.Detections.empty():
-            cv2.imwrite(args.imgpath, anonymized_im)
-            logger.info(f"Saved anonymized image to {args.imgpath}")
+    # Multiprocess : Anonymize
+    logger.info("Anonymizing images...")
+    sucess_files, failed_files = multiprocess_anonymize(
+        detector=detector,
+        source_directory=args.images,
+        images_names=list(images_annotated.keys()),
+        pool_size=5,
+    )
+    logger.info("Anonymization completed.")
 
 
 if __name__ == "__main__":
