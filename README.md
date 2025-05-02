@@ -1,11 +1,10 @@
-# Template : How to start and customize?
+# Model-Face - AISP repository for face detection and recognition
 
-- [ ] Create new repository from this template
-- [ ] Inside pyproject.toml rename `package_name`
-- [ ] Rename aisp_template directory to `package_name`
-- [ ] Update `README.md`
+Detector used for blurring or pixelating faces in images. Recognizer used for face recognition and verification.
 
-# Template directory structure
+![Face detection and recognition](docs/title.png)
+
+# Directory structure
 
 - package_name/ - Insert package code here
 - tests/ - Insert unit tests here
