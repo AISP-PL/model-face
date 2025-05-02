@@ -1,5 +1,5 @@
 [project]
-name = "Template"
+name = "Model-Face"
 description = ""
 authors = [{ name = "AISP", email = "kontakt@aisp.pl" }]
 readme = "README.md"
@@ -7,9 +7,9 @@ requires-python = ">=3.11, <3.12"
 dynamic = ["version"]
 
 dependencies = [
-    "dotenv>=0.9.9",
-    "opencv-python>=4.11.0.86",
-    "supervision>=0.25.1",
+  "dotenv>=0.9.9",
+  "opencv-python>=4.11.0.86",
+  "supervision>=0.25.1",
 ]
 
 [dependency-groups]
@@ -89,3 +89,7 @@ markers = [
   "manual: marks tests as manual only (deselect with '-m \"not manual\"')",
   "gpu: marks tests that require GPU",
 ]
+
+# Scripts
+[project.scripts]
+face-detect = "model_face.main:main_detect"

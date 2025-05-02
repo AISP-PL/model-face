@@ -221,7 +221,8 @@ class YOLOv8FaceDetection:
         return np.stack([x1, y1, x2, y2], axis=-1)
 
 
-if __name__ == "__main__":
+def main_detect() -> None:
+    """Main function to run the detection."""
     # Basic logging config to console
     logging.basicConfig(
         level=logging.INFO,
@@ -250,10 +251,10 @@ if __name__ == "__main__":
     source = cv2.imread(args.imgpath)
 
     # Detect Objects
-    YOLOv8_face_detector = YOLOv8FaceDetection(
+    detector = YOLOv8FaceDetection(
         args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold
     )
-    detections = YOLOv8_face_detector.detect(source)
+    detections = detector.detect(source)
 
     # Draw detections
     annotated = source.copy()
@@ -261,3 +262,7 @@ if __name__ == "__main__":
     scene = annotator.annotate(scene=annotated, detections=detections)
     cv2.imshow("YOLOv8 Face Detection", scene)
     cv2.waitKey(0)
+
+
+if __name__ == "__main__":
+    main_detect()
