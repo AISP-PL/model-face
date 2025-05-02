@@ -3,12 +3,14 @@ import math
 
 import cv2
 import numpy as np
+import supervision as sv  # type: ignore
 
 
 class YOLOv8FaceDetection:
     """YOLOv8 face detection model"""
 
     def __init__(self, path, conf_thres=0.2, iou_thres=0.5):
+        """Initialize YOLOv8 face detection model."""
         self.conf_threshold = conf_thres
         self.iou_threshold = iou_thres
         self.class_names = ["face"]
@@ -40,16 +42,17 @@ class YOLOv8FaceDetection:
             sx, sy = np.meshgrid(x, y)
             # sy, sx = np.meshgrid(y, x)
             anchor_points[stride] = np.stack((sx, sy), axis=-1).reshape(-1, 2)
+
         return anchor_points
 
     def softmax(self, x, axis=1):
+        """Softmax function for multi-class classification."""
         x_exp = np.exp(x)
-        # 如果是列向量，则axis=0
         x_sum = np.sum(x_exp, axis=axis, keepdims=True)
-        s = x_exp / x_sum
-        return s
+        return x_exp / x_sum
 
     def resize_image(self, srcimg, keep_ratio=True):
+        """Resize image to input size with padding."""
         top, left, newh, neww = 0, 0, self.input_width, self.input_height
         if keep_ratio and srcimg.shape[0] != srcimg.shape[1]:
             hw_scale = srcimg.shape[0] / srcimg.shape[1]
@@ -87,7 +90,21 @@ class YOLOv8FaceDetection:
             )
         return img, newh, neww, top, left
 
-    def detect(self, srcimg):
+    def detect(self, srcimg: np.ndarray) -> sv.Detections:
+        """
+        Detect objects in the image.
+
+        Arguments:
+        ----------
+        srcimg : np.ndarray
+            Input image in BGR format.
+
+        Returns:
+        --------
+        det_bboxes : np.ndarray
+            Detected bounding boxes.
+
+        """
         input_img, newh, neww, padh, padw = self.resize_image(
             cv2.cvtColor(srcimg, cv2.COLOR_BGR2RGB)
         )
@@ -97,15 +114,18 @@ class YOLOv8FaceDetection:
         blob = cv2.dnn.blobFromImage(input_img)
         self.net.setInput(blob)
         outputs = self.net.forward(self.net.getUnconnectedOutLayersNames())
-        # if isinstance(outputs, tuple):
-        #     outputs = list(outputs)
-        # if float(cv2.__version__[:3])>=4.7:
-        #     outputs = [outputs[2], outputs[0], outputs[1]] ###opencv4.7需要这一步，opencv4.5不需要
+
         # Perform inference on the image
         det_bboxes, det_conf, det_classid, landmarks = self.post_process(
             outputs, scale_h, scale_w, padh, padw
         )
-        return det_bboxes, det_conf, det_classid, landmarks
+
+        return sv.Detections(
+            xyxy=det_bboxes.astype(int),
+            class_id=det_classid.astype(int),
+            confidence=det_conf.astype(float),
+            data={"landmarks": landmarks.astype(float)},
+        )
 
     def post_process(self, preds, scale_h, scale_w, padh, padw):
         bboxes, scores, landmarks = [], [], []
@@ -142,7 +162,7 @@ class YOLOv8FaceDetection:
             ) * stride
             kpts[:, 2::3] = 1 / (1 + np.exp(-kpts[:, 2::3]))
 
-            bbox -= np.array([[padw, padh, padw, padh]])  ###合理使用广播法则
+            bbox -= np.array([[padw, padh, padw, padh]])
             bbox *= np.array([[scale_w, scale_h, scale_w, scale_h]])
             kpts -= np.tile(np.array([padw, padh, 0]), 5).reshape((1, 15))
             kpts *= np.tile(np.array([scale_w, scale_h, 1]), 5).reshape((1, 15))
@@ -161,7 +181,7 @@ class YOLOv8FaceDetection:
         confidences = np.max(scores, axis=1)  ####max_class_confidence
 
         mask = confidences > self.conf_threshold
-        bboxes_wh = bboxes_wh[mask]  ###合理使用广播法则
+        bboxes_wh = bboxes_wh[mask]
         confidences = confidences[mask]
         classIds = classIds[mask]
         landmarks = landmarks[mask]
@@ -178,9 +198,9 @@ class YOLOv8FaceDetection:
             classIds = classIds[indices]
             landmarks = landmarks[indices]
             return mlvl_bboxes, confidences, classIds, landmarks
-        else:
-            print("nothing detect")
-            return np.array([]), np.array([]), np.array([]), np.array([])
+
+        print("nothing detect")
+        return np.array([]), np.array([]), np.array([]), np.array([])
 
     def distance2bbox(self, points, distance, max_shape=None):
         x1 = points[:, 0] - distance[:, 0]
@@ -194,41 +214,16 @@ class YOLOv8FaceDetection:
             y2 = np.clip(y2, 0, max_shape[0])
         return np.stack([x1, y1, x2, y2], axis=-1)
 
-    def draw_detections(self, image, boxes, scores, kpts):
-        for box, score, kp in zip(boxes, scores, kpts):
-            x, y, w, h = box.astype(int)
-            # Draw rectangle
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), thickness=3)
-            cv2.putText(
-                image,
-                "face:" + str(round(score, 2)),
-                (x, y - 5),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 0, 255),
-                thickness=2,
-            )
-            for i in range(5):
-                cv2.circle(
-                    image,
-                    (int(kp[i * 3]), int(kp[i * 3 + 1])),
-                    4,
-                    (0, 255, 0),
-                    thickness=-1,
-                )
-                # cv2.putText(image, str(i), (int(kp[i * 3]), int(kp[i * 3 + 1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), thickness=1)
-        return image
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--imgpath", type=str, default="images/2.jpg", help="image path"
+        "--imgpath", type=str, default="images/1.jpg", help="image path"
     )
     parser.add_argument(
         "--modelpath",
         type=str,
-        default="weights/yolov8n-face.onnx",
+        default="zoo/yolov8n-face.onnx",
         help="onnx filepath",
     )
     parser.add_argument(
@@ -240,19 +235,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Initialize YOLOv8_face object detector
+    source = cv2.imread(args.imgpath)
+
+    # Detect Objects
     YOLOv8_face_detector = YOLOv8FaceDetection(
         args.modelpath, conf_thres=args.confThreshold, iou_thres=args.nmsThreshold
     )
-    srcimg = cv2.imread(args.imgpath)
-
-    # Detect Objects
-    boxes, scores, classids, kpts = YOLOv8_face_detector.detect(srcimg)
+    detections = YOLOv8_face_detector.detect(source)
 
     # Draw detections
-    dstimg = YOLOv8_face_detector.draw_detections(srcimg, boxes, scores, kpts)
-    # cv2.imwrite('result.jpg', dstimg)
-    winName = "Deep learning face detection use OpenCV"
-    cv2.namedWindow(winName, 0)
-    cv2.imshow(winName, dstimg)
+    annotated = source.copy()
+    annotator = sv.BoxAnnotator()
+    scene = annotator.annotate(scene=annotated, detections=detections)
+    cv2.imshow("YOLOv8 Face Detection", scene)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
